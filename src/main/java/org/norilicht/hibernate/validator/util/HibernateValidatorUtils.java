@@ -8,7 +8,10 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.ValidationException;
 import javax.validation.Validator;
+import javax.validation.ValidatorContext;
 import javax.validation.ValidatorFactory;
+
+import org.norilicht.hibernate.validator.factory.ConstraintValidatorFactoryImpl;
 
 public final class HibernateValidatorUtils {
 	private static final String MESSAGE_FORMAT = "[%s] %s : %s";
@@ -16,8 +19,7 @@ public final class HibernateValidatorUtils {
 	private HibernateValidatorUtils() { }
 
 	public static final void validate(Object object) throws ValidationException {
-		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-		Validator validator = factory.getValidator();
+		Validator validator = getValidator();
 
 		Set<ConstraintViolation<Object>> violations = validator.validate(object);
 
@@ -56,4 +58,11 @@ public final class HibernateValidatorUtils {
 		return messages.toString();
 	}
 
+	private static Validator getValidator() {
+		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+		ValidatorContext validatorContext = factory.usingContext();
+		validatorContext.constraintValidatorFactory(new ConstraintValidatorFactoryImpl(validatorContext));
+		Validator validator = validatorContext.getValidator();
+		return validator;
+	}
 }
